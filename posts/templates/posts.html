@@ -1,0 +1,205 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <style>
+        .navbar-brand img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .post-card {
+            border: none;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .post-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .post-time {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .post-actions a {
+            color: #6c757d;
+            margin-right: 15px;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+        .post-actions a:hover {
+            color: #007bff;
+        }
+        .comments-section {
+            margin-top: 10px;
+            border-top: 1px solid #e9ecef;
+            padding-top: 10px;
+        }
+        .comments-section p {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        .search-bar {
+            max-width: 300px;
+        }
+        .btn-primary, .btn-outline-secondary {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'default-profile.png' %}{% endif %}" alt="Logo">
+                <span class="ms-2">IdeaMart</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <form method="GET" action="{% url 'user_list' %}" class="search-bar ms-auto me-3 d-flex">
+                    <input type="text" name="q" class="form-control" placeholder="Search users..." value="{{ query }}">
+                </form>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'conversation_view' user_id=request.user.id %}">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'marketplace' %}">Marketplace</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Notifications</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'default-profile.png' %}{% endif %}" alt="Profile" width="30" height="30">
+                            <span class="ms-2">{{ request.user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile_view' username=request.user.username %}">My Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'account' username=request.user.username %}">My Account</a></li>                            
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Posts Section -->
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">All Posts</h2>
+            <div>
+                <a href="{% url 'create_post' %}" class="btn btn-primary">Create New Post</a>
+                <a href="{% url 'my_posts' username=request.user.username %}" class="btn btn-outline-secondary">My Posts</a>
+            </div>
+        </div>
+
+        {% for post in posts %}
+            <div class="post-card">
+                <div class="post-header d-flex align-items-center">
+                    <img src="{{ post.user.profile.profile_picture.url }}" alt="User">
+                    <div class="ms-3">
+                        <a href="{% url 'view_profile' username=post.user.username %}" class="text-decoration-none text-dark">
+                            <strong>{{ post.user.username }}</strong>
+                        </a>
+                        <div class="post-time">{{ post.created_at|date:"F j, Y, g:i a" }}</div>
+                    </div>
+                </div>
+                <p class="mt-3">{{ post.description }}</p>
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="Post image" class="img-fluid rounded mt-2">
+                {% endif %}
+                <div class="post-actions mt-3">
+                    <a href="javascript:void(0)" onclick="handleLike({{ post.id }})">❤️</a>
+                    <span id="likes-count-{{ post.id }}">{{ post.likes.count }}</span>
+                    <a href="javascript:void(0)" onclick="handleDislike({{ post.id }})">👎</a>
+                    <span id="dislikes-count-{{ post.id }}">{{ post.dislikes.count }}</span>
+                </div>
+                <div class="comments-section">
+                    <textarea id="comment-text-{{ post.id }}" class="form-control mb-2" placeholder="Write a comment..."></textarea>
+                    <button class="btn btn-sm btn-primary" onclick="handleComment({{ post.id }})">Comment</button>
+                    <span id="comments-count-{{ post.id }}">{{ post.comments.count }}</span>                   
+                    <div id="comments-list-{{ post.id }}" class="mt-3">
+                        {% for comment in post.comments.all %}
+                            <p><strong>{{ comment.user.username }}</strong>: {{ comment.text }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No posts yet.</p>
+        {% endfor %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function handleLike(postId) {
+        // Send the like request to the server
+        fetch(`/like/${postId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Update the likes count
+                document.getElementById(`likes-count-${postId}`).innerText = data.likes_count;
+                
+                // Hide the like button and show the dislike button
+                document.getElementById(`like-button-${postId}`).style.display = 'none';
+                document.getElementById(`dislike-button-${postId}`).style.display = 'inline-block';
+            });
+    }
+
+    function handleDislike(postId) {
+        // Send the dislike request to the server
+        fetch(`/dislike/${postId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Update the dislikes count
+                document.getElementById(`dislikes-count-${postId}`).innerText = data.dislikes_count;
+
+                // Hide the dislike button and show the like button
+                document.getElementById(`dislike-button-${postId}`).style.display = 'none';
+                document.getElementById(`like-button-${postId}`).style.display = 'inline-block';
+            });
+    }
+
+    
+        function handleComment(postId) {
+            const commentText = document.getElementById(`comment-text-${postId}`).value;
+    
+            fetch(`/comment/${postId}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: `text=${commentText}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById(`comments-count-${postId}`).innerText = data.comments_count;
+    
+                    const commentsDiv = document.getElementById(`comments-list-${postId}`);
+                    commentsDiv.innerHTML = '';
+                    data.comments.forEach(comment => {
+                        const commentElement = document.createElement('p');
+                        commentElement.innerText = `${comment.user}: ${comment.text}`;
+                        commentsDiv.appendChild(commentElement);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
