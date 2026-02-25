@@ -1,0 +1,79 @@
+{% extends 'layout.html' %} {% block body %}
+
+<div class="container m-5 mx-auto">
+  <div class="row">
+    <div class="col-md-6">
+      <h1>Make M-pesa Payment</h1>
+      <form action="/stk_push/" method="post" class="form">
+        {% csrf_token %}
+        {% if product.user %}
+            <label for="seller">Seller ID:</label><br />
+            <input
+              class="form-control"
+              type="text"
+              id="seller"
+              name="seller"
+              value="{{ product.user.id }}"
+              required
+              readonly  
+            /><br />
+
+
+            <label for="product">Product ID:</label><br />
+            <input
+              class="form-control"
+              type="text"
+              id="product"
+              name="product"
+              value="{{ product.id }}"
+              required
+              readonly  
+            /><br />
+        {% endif %}
+
+        <label for="phone">Phone Number:</label><br />
+        <input
+          class="form-control"
+          type="text"
+          id="phone"
+          name="phone"
+          value="254"
+          required
+        /><br />
+        <label for="amount">Amount:</label><br />
+        <input
+          class="form-control"
+          type="number"
+          id="amount"
+          name="amount"
+          placeholder="Amount"
+          required
+          min="1"
+        /><br />
+
+        <label for="name">Name:</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          name="name"
+          required
+        />
+        <br />
+
+        <label for="email">Email Address:</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          name="email"
+          required
+        />
+        <br />
+        <button class="btn btn-success" type="submit">Pay Now</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
